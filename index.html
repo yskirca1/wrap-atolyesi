@@ -1,0 +1,940 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0d0f13">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Wrap Atölyesi">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Wrap Atölyesi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;900&family=Unbounded:wght@500;700;900&family=JetBrains+Mono:wght@400;600&family=Bebas+Neue&family=Permanent+Marker&family=Orbitron:wght@500;700;900&family=Playfair+Display:wght@700;900&display=swap">
+<style>
+/* Layout: workshop shell — tools+layers left, the flat wrap sheet as the stage in the center, inspector right; stacks on phones */
+:root{
+  --bg:#eceef2; --panel:#ffffff; --panel2:#f3f5f8; --line:#d8dde5; --fg:#141922; --muted:#5b6474;
+  --accent:#3350ee; --accent-soft:#e3e8ff; --accent-fg:#ffffff; --danger:#d93a40;
+  --check-a:#e6e9ee; --check-b:#f7f8fa;
+  --f-ui:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-display:"Unbounded","Figtree",system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0d0f13; --panel:#151920; --panel2:#1c212a; --line:#2a313c; --fg:#e7eaf0; --muted:#8b94a5;
+  --accent:#5b75ff; --accent-soft:#222b55; --accent-fg:#ffffff; --danger:#ff6168;
+  --check-a:#1a1e25; --check-b:#22272f; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0d0f13; --panel:#151920; --panel2:#1c212a; --line:#2a313c; --fg:#e7eaf0; --muted:#8b94a5;
+  --accent:#5b75ff; --accent-soft:#222b55; --accent-fg:#ffffff; --danger:#ff6168;
+  --check-a:#1a1e25; --check-b:#22272f; color-scheme:dark}
+
+html,body{height:100%}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;-webkit-text-size-adjust:100%}
+img{max-width:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-ui);font-size:14px;line-height:1.45}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.app{display:flex;flex-direction:column;min-height:100%;padding-inline:16px;padding-block:12px 20px;gap:12px}
+header.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.brand{display:flex;align-items:baseline;gap:10px;margin-right:auto;min-width:0}
+.brand h1{font-family:var(--f-display);font-weight:700;font-size:18px;margin:0;letter-spacing:-.01em}
+.brand span{color:var(--muted);font-size:12.5px}
+.btn{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--panel);padding:8px 12px;border-radius:8px;font-weight:600;font-size:13px;white-space:nowrap}
+.btn:hover{border-color:var(--muted)}
+.btn:disabled{opacity:.4;cursor:default}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.ghost{background:transparent}
+.btn.danger{color:var(--danger)}
+.btn svg{width:16px;height:16px;flex:none}
+.iconbtn{width:34px;height:34px;padding:0;justify-content:center}
+
+.model-btn{display:flex;align-items:center;gap:10px;padding:5px 12px 5px 5px}
+.model-btn img{width:40px;height:40px;object-fit:cover;border-radius:6px;background:#000}
+.model-btn b{display:block;font-size:13px;line-height:1.2}
+.model-btn small{display:block;color:var(--muted);font-size:11.5px;font-weight:500}
+.model-btn{overflow:hidden}
+.model-btn b,.model-btn small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+.work{display:grid;grid-template-columns:232px minmax(0,1fr) 272px;gap:12px;flex:1;min-height:0}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.panel h2{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin:0;font-weight:700}
+.side{display:flex;flex-direction:column;gap:12px;min-width:0}
+
+.tools{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.tool{display:flex;flex-direction:column;align-items:center;gap:5px;padding:10px 4px 8px;border:1px solid var(--line);border-radius:8px;background:var(--panel2);font-size:11.5px;font-weight:600}
+.tool:hover{border-color:var(--muted)}
+.tool[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.tool svg{width:20px;height:20px}
+
+.layers{display:flex;flex-direction:column;gap:4px;max-height:420px;overflow:auto;margin-inline:-4px;padding-inline:4px}
+.layer{display:grid;grid-template-columns:34px minmax(0,1fr) auto;align-items:center;gap:8px;padding:5px 6px;border-radius:8px;border:1px solid transparent;cursor:pointer}
+.layer:hover{background:var(--panel2)}
+.layer.sel{background:var(--accent-soft);border-color:var(--accent)}
+.layer canvas{width:34px;height:34px;border-radius:5px;background:conic-gradient(var(--check-a) 25%,var(--check-b) 0 50%,var(--check-a) 0 75%,var(--check-b) 0) 0 0/10px 10px;border:1px solid var(--line)}
+.layer .nm{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.layer .nm small{display:block;font-weight:500;color:var(--muted);font-size:11px}
+.layer.hidden .nm,.layer.hidden canvas{opacity:.4}
+.layer .acts{display:flex;gap:2px}
+.mini{width:26px;height:26px;display:grid;place-items:center;border:0;background:transparent;border-radius:6px;color:var(--muted)}
+.mini:hover{background:var(--panel);color:var(--fg)}
+.mini svg{width:15px;height:15px}
+.empty{color:var(--muted);font-size:13px;padding:6px 2px}
+
+.center{display:flex;flex-direction:column;gap:10px;min-width:0;align-items:center}
+.stage{position:relative;width:min(100%, calc((100vh - 190px) * var(--ar,1)));min-width:260px;aspect-ratio:var(--ar,1);max-width:100%;border-radius:var(--r);overflow:hidden;
+  background:conic-gradient(var(--check-a) 25%,var(--check-b) 0 50%,var(--check-a) 0 75%,var(--check-b) 0) 0 0/24px 24px;border:1px solid var(--line)}
+.stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+#over{touch-action:none;cursor:default}
+#over.brush{cursor:crosshair}
+.stage.drop::after{content:"Görseli bırak";position:absolute;inset:0;display:grid;place-items:center;background:color-mix(in srgb,var(--accent) 30%,transparent);color:#fff;font-weight:700;font-size:18px}
+.viewbar{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;justify-content:center;color:var(--muted);font-size:12.5px}
+.viewbar label{display:inline-flex;align-items:center;gap:6px;cursor:pointer}
+.viewbar input[type=range]{width:80px}
+.hint{font-size:12px;color:var(--muted);text-align:center;max-width:62ch}
+.hint kbd{font-family:var(--f-mono);font-size:11px;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 4px;background:var(--panel)}
+
+.props{display:flex;flex-direction:column;gap:10px}
+.field{display:grid;grid-template-columns:78px minmax(0,1fr);align-items:center;gap:8px}
+.field>span{font-size:12px;color:var(--muted);font-weight:600}
+.field input[type=text],.field select,.field textarea{width:100%;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--panel2)}
+.field textarea{resize:vertical;min-height:52px}
+.rng{display:grid;grid-template-columns:minmax(0,1fr) 52px;gap:6px;align-items:center}
+.rng input[type=range]{width:100%;accent-color:var(--accent)}
+.rng input[type=number]{width:100%;padding:4px 5px;border:1px solid var(--line);border-radius:6px;background:var(--panel2);font-family:var(--f-mono);font-size:12px;font-variant-numeric:tabular-nums}
+.clr{display:flex;gap:6px;align-items:center}
+.clr input[type=color]{width:34px;height:30px;padding:0;border:1px solid var(--line);border-radius:6px;background:none;cursor:pointer}
+.clr input[type=text]{font-family:var(--f-mono);font-size:12px}
+.swatches{display:flex;flex-wrap:wrap;gap:5px}
+.sw{width:20px;height:20px;border-radius:5px;border:1px solid var(--line);padding:0}
+.rowbtns{display:flex;flex-wrap:wrap;gap:6px}
+.rowbtns .btn{padding:6px 9px;font-size:12px}
+.sep{height:1px;background:var(--line);margin-block:2px}
+.spec{font-family:var(--f-mono);font-size:11.5px;color:var(--muted);line-height:1.6}
+
+/* model picker + modals */
+.scrim{position:fixed;inset:0;background:rgba(5,7,12,.55);display:grid;place-items:center;padding:16px;z-index:20}
+.sheet{background:var(--panel);border:1px solid var(--line);border-radius:14px;width:min(760px,100%);max-height:calc(100% - 16px);overflow:auto;padding:18px;display:flex;flex-direction:column;gap:14px}
+.sheet header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.sheet h3{margin:0;font-family:var(--f-display);font-size:16px;font-weight:700}
+.models{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
+.mcard{display:flex;flex-direction:column;gap:6px;padding:6px 6px 10px;border:1px solid var(--line);border-radius:10px;background:var(--panel2);text-align:left}
+.mcard img{width:100%;aspect-ratio:1.1;object-fit:cover;border-radius:6px;background:#000}
+.mcard b{font-size:13px;padding-inline:4px}
+.mcard small{color:var(--muted);font-size:11.5px;padding-inline:4px;margin-top:-5px}
+.mcard[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+.export-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:16px}
+.export-grid .prev{border-radius:10px;border:1px solid var(--line);background:conic-gradient(var(--check-a) 25%,var(--check-b) 0 50%,var(--check-a) 0 75%,var(--check-b) 0) 0 0/16px 16px;width:100%;height:auto;display:block}
+.export-grid ol{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;font-size:13px}
+.export-grid ol b{font-weight:700}
+.status{font-size:12.5px;color:var(--muted);min-height:1.4em}
+.status.err{color:var(--danger)}
+.status.ok{color:var(--accent)}
+.fname{display:flex;align-items:center;border:1px solid var(--line);border-radius:8px;background:var(--panel2);overflow:hidden}
+.fname input{flex:1;min-width:0;border:0;background:transparent;padding:8px 10px}
+.fname span{padding-right:10px;color:var(--muted);font-family:var(--f-mono);font-size:12px}
+.gen textarea{width:100%;min-height:64px;resize:vertical;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel2);font-size:14px}
+.gen .rowbtns .btn{flex:1;justify-content:center}
+.chips{display:flex;flex-wrap:wrap;gap:5px}
+.chip{border:1px solid var(--line);background:var(--panel2);border-radius:999px;padding:3px 9px;font-size:11.5px;font-weight:600;color:var(--muted)}
+.chip:hover{color:var(--fg);border-color:var(--muted)}
+.alts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.alt{display:flex;flex-direction:column;gap:5px;padding:5px;border:1px solid var(--line);border-radius:9px;background:var(--panel2);text-align:left;min-width:0}
+.alt:hover{border-color:var(--accent)}
+.alt canvas{width:100%;height:auto;aspect-ratio:var(--ar,1);border-radius:6px;display:block;background:conic-gradient(var(--check-a) 25%,var(--check-b) 0 50%,var(--check-a) 0 75%,var(--check-b) 0) 0 0/12px 12px}
+.alt b{font-size:12px;line-height:1.25;padding-inline:2px;overflow-wrap:anywhere}
+.alt small{font-size:11px;color:var(--muted);padding-inline:2px;margin-top:-4px}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:8px;font-weight:600;font-size:13px;z-index:30}
+
+@media (max-width:1080px){
+  .work{grid-template-columns:220px minmax(0,1fr)}
+  .side.right{grid-column:1 / -1}
+}
+@media (max-width:720px){
+  .work{grid-template-columns:minmax(0,1fr)}
+  .center{order:-1}
+  .stage{width:100%;min-width:0}
+  .export-grid{grid-template-columns:minmax(0,1fr)}
+  .brand span{display:none}
+  .brand{flex-basis:100%}
+  .model-btn{flex:1;min-width:0}
+  .model-btn span{min-width:0;text-align:left}
+  #exportBtn{padding-inline:10px}
+  .work .side.left{display:contents}
+  .side.right{order:1}
+  .layers-panel{order:2}
+  .tools{grid-template-columns:repeat(5,1fr)}
+}
+@media (max-width:440px){ .model-btn{flex:0 0 auto;padding-right:5px} .model-btn span{display:none} #newBtn{padding-inline:9px} .top{gap:8px} .top .btn.primary{margin-left:auto} }
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand"><h1>Wrap Atölyesi</h1><span>Tesla Paint Shop için sıfırdan kaplama tasarla</span></div>
+    <button class="btn model-btn" id="modelBtn" aria-haspopup="dialog"><img id="modelImg" alt=""><span><b id="modelName">Model Y</b><small id="modelSub">2025+ Premium</small></span></button>
+    <button class="btn iconbtn" id="undoBtn" title="Geri al (Ctrl+Z)" aria-label="Geri al"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg></button>
+    <button class="btn iconbtn" id="redoBtn" title="Yinele (Ctrl+Shift+Z)" aria-label="Yinele"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 14 5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/></svg></button>
+    <button class="btn ghost" id="newBtn">Yeni</button>
+    <button class="btn primary" id="exportBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>PNG indir</button>
+  </header>
+
+  <div class="work">
+    <aside class="side left">
+      <section class="panel gen">
+        <h2>Kelimelerle tasarla</h2>
+        <textarea id="genIn" placeholder='Örn: kırmızı siyah yarış karbon "07"' aria-label="Tasarım kelimeleri">lacivert altın lüks şerit</textarea>
+        <div class="chips" id="genChips"></div>
+        <div class="rowbtns">
+          <button class="btn primary" id="genBtn">4 alternatif üret</button>
+        </div>
+        <div class="status" id="genStatus"></div>
+        <div class="alts" id="alts"></div>
+      </section>
+      <section class="panel">
+        <h2>Ekle</h2>
+        <div class="tools" id="tools"></div>
+        <input type="file" id="fileIn" accept="image/*" hidden>
+      </section>
+      <section class="panel layers-panel">
+        <h2>Katmanlar</h2>
+        <div class="layers" id="layers"></div>
+      </section>
+    </aside>
+
+    <main class="center">
+      <div class="stage" id="stage">
+        <canvas id="main" width="1024" height="1024"></canvas>
+        <canvas id="over" width="1024" height="1024" aria-label="Wrap tasarım alanı"></canvas>
+      </div>
+      <div class="viewbar">
+        <label><input type="checkbox" id="optLines" checked> Panel çizgileri</label>
+        <label>Koyuluk <input type="range" id="optLineOp" min="0.1" max="1" step="0.05" value="0.7"></label>
+        <label><input type="checkbox" id="optMask" checked> Sadece paneller</label>
+      </div>
+      <p class="hint">Şablonun üst kısmı aracın önü. Orta sütun kaput, tavan ve bagaj; yanlar kapılar ve çamurluklar. Nesneyi sürükle, köşeden boyutlandır, üstteki noktadan döndür. <kbd>Del</kbd> sil, <kbd>Ctrl</kbd>+<kbd>D</kbd> çoğalt, oklar 1 px kaydırır (<kbd>Shift</kbd> ile 10).</p>
+    </main>
+
+    <aside class="side right">
+      <section class="panel">
+        <h2 id="propsTitle">Özellikler</h2>
+        <div class="props" id="props"></div>
+      </section>
+    </aside>
+  </div>
+</div>
+
+<div class="scrim" id="modelSheet" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+    <header><h3 id="mTitle">Modelini seç</h3><button class="btn ghost" data-close>Kapat</button></header>
+    <div class="models" id="models"></div>
+    <p class="spec">Şablonlar Tesla'nın resmi teslamotors/custom-wraps deposundan alınmıştır. Tasarımın model değişince korunur, yalnızca panel yerleşimi değişir.</p>
+  </div>
+</div>
+
+<div class="scrim" id="exportSheet" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="eTitle">
+    <header><h3 id="eTitle">Wrap'i indir</h3><button class="btn ghost" data-close>Kapat</button></header>
+    <div class="export-grid">
+      <img class="prev" id="expPrev" alt="Dışa aktarılacak wrap önizlemesi">
+      <div style="display:flex;flex-direction:column;gap:12px;min-width:0">
+        <label class="field" style="grid-template-columns:1fr"><span>Dosya adı (araçta bu adla görünür)</span>
+          <div class="fname"><input id="expName" maxlength="30" value="Benim Wrapim"><span>.png</span></div></label>
+        <div class="spec" id="expSpec"></div>
+        <div class="rowbtns"><button class="btn primary" id="expSave">PNG'yi kaydet</button></div>
+        <div class="status" id="expStatus"></div>
+        <div class="sep"></div>
+        <ol>
+          <li><b>Tesla uygulaması</b> (4.59+): Creations → Wrap → Upload</li>
+          <li><b>USB bellek</b>: exFAT veya FAT32, kökte <code>Wraps</code> klasörü, PNG içine. Bellekte harita/yazılım güncellemesi olmasın.</li>
+          <li><b>Araçta</b>: Toybox → Paint Shop → Wraps</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(()=>{
+const MODELS=[
+ {id:'modely-2025-premium',n:'Model Y',s:'2025+ Premium'},
+ {id:'modely-2025-performance',n:'Model Y',s:'2025+ Performance'},
+ {id:'modely-2025-base',n:'Model Y',s:'2025+ Standard'},
+ {id:'modely',n:'Model Y',s:'2020–2024'},
+ {id:'modely-l',n:'Model Y L',s:''},
+ {id:'model3-2024-base',n:'Model 3',s:'2024+ Standard / Premium'},
+ {id:'model3-2024-performance',n:'Model 3',s:'2024+ Performance'},
+ {id:'model3',n:'Model 3',s:'2017–2023'},
+ {id:'models-2021',n:'Model S',s:'2021+'},
+ {id:'models-2025-plaid',n:'Model S',s:'2025+ Plaid'},
+ {id:'modelx-2021',n:'Model X',s:'2021+'},
+ {id:'cybertruck',n:'Cybertruck',s:''}
+];
+const FONTS=['Bebas Neue','Unbounded','Orbitron','Permanent Marker','Playfair Display','Figtree'];
+const SWATCHES=['#ffffff','#0b0b0d','#c8102e','#ff6a00','#ffd400','#7ad151','#00a99d','#1e6bff','#3a1c71','#ff4fa3','#9aa3ad','#4b3621'];
+const PI=Math.PI, $=s=>document.querySelector(s);
+const asset=n=>(window.WRAP_ASSETS&&window.WRAP_ASSETS[n])||`t/${n}.png`;
+const main=$('#main'), over=$('#over'), ctx=main.getContext('2d'), octx=over.getContext('2d');
+let W=1024,H=1024;
+
+// ---------- state ----------
+let S={model:'modely-2025-premium',layers:[],lines:true,lineOp:.7,mask:true};
+let sel=null, mode='select', brush={color:'#ffffff',width:18};
+const imgs={}, imgSrc={};          // image layers: id -> Image / dataURL
+const tpl={};                       // model -> {mask,lines}
+let undo=[], redo=[];
+let uid=1; const nid=()=>'L'+Date.now().toString(36)+(uid++);
+
+const ICON={
+ fill:'<path d="M5 5h14v14H5z"/>',
+ gradient:'<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 16 16 4M4 11l7-7M9 20 20 9M14 20l6-6"/>',
+ pattern:'<circle cx="7" cy="7" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="17" cy="17" r="1.6"/><circle cx="17" cy="7" r="1.6"/><circle cx="7" cy="17" r="1.6"/>',
+ rect:'<rect x="4" y="6" width="16" height="12" rx="1.5"/>',
+ ellipse:'<circle cx="12" cy="12" r="8"/>',
+ stripe:'<path d="M9 3v18M15 3v18"/>',
+ text:'<path d="M5 6V4h14v2M12 4v16M9 20h6"/>',
+ image:'<rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="1.8"/><path d="m21 16-5-5-9 8"/>',
+ brush:'<path d="M14 4l6 6-9 9H5v-6z"/><path d="M12 6l6 6"/>'
+};
+const TYPE_TR={fill:'Renk dolgu',gradient:'Gradyan',pattern:'Desen',rect:'Dikdörtgen',ellipse:'Elips',text:'Yazı',image:'Görsel',brush:'Fırça çizgisi'};
+const svg=p=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+
+// ---------- sample ----------
+function sample(){
+  return [
+   {id:nid(),type:'gradient',name:'Zemin gradyanı',c1:'#0a1430',c2:'#2f4cff',angle:165,kind:'linear',opacity:1,blend:'source-over',visible:true},
+   {id:nid(),type:'pattern',name:'Karbon doku',kind:'carbon',c1:'#000000',c2:'#ffffff',scale:22,angle:45,opacity:.12,blend:'overlay',visible:true},
+   {id:nid(),type:'rect',name:'Yarış şeridi sol',x:478,y:512,w:34,h:1024,rot:0,color:'#ffffff',radius:0,strokeW:0,strokeC:'#000000',opacity:1,blend:'source-over',visible:true},
+   {id:nid(),type:'rect',name:'Yarış şeridi sağ',x:546,y:512,w:34,h:1024,rot:0,color:'#ffffff',radius:0,strokeW:0,strokeC:'#000000',opacity:1,blend:'source-over',visible:true},
+   {id:nid(),type:'text',name:'Yan yazı',text:'VOLT',font:'Bebas Neue',size:120,weight:400,color:'#ffd400',strokeW:0,strokeC:'#000000',x:160,y:470,rot:-90,opacity:1,blend:'source-over',visible:true},
+   {id:nid(),type:'text',name:'Yan yazı sağ',text:'VOLT',font:'Bebas Neue',size:120,weight:400,color:'#ffd400',strokeW:0,strokeC:'#000000',x:862,y:470,rot:90,opacity:1,blend:'source-over',visible:true}
+  ];
+}
+
+// ---------- templates ----------
+function loadImg(src){return new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=src})}
+async function ensureTpl(id){
+  if(tpl[id]) return tpl[id];
+  const [mask,lines]=await Promise.all([loadImg(asset(`${id}-mask`)),loadImg(asset(`${id}-lines`))]);
+  return tpl[id]={mask,lines};
+}
+async function setModel(id,commitIt){
+  S.model=id; const m=MODELS.find(x=>x.id===id)||MODELS[0];
+  $('#modelImg').src=asset(`${m.id}-car`); $('#modelName').textContent=m.n; $('#modelSub').textContent=m.s||'Tüm versiyonlar';
+  try{ const t=await ensureTpl(id); W=t.mask.naturalWidth; H=t.mask.naturalHeight; }catch(e){ toast('Şablon yüklenemedi'); }
+  for(const c of [main,over]){ if(c.width!==W) c.width=W; if(c.height!==H) c.height=H; }
+  $('#stage').style.setProperty('--ar',W/H);
+  render(); if(commitIt) commit(); if(typeof alts!=='undefined'&&alts.length) showAlts(alts);
+}
+
+// ---------- drawing ----------
+function fontStr(L){return `${L.weight||400} ${L.size}px "${L.font}", sans-serif`}
+function textBox(L,c){
+  c=c||ctx; c.save(); c.font=fontStr(L);
+  const lines=String(L.text||' ').split('\n'); let w=0; for(const ln of lines) w=Math.max(w,c.measureText(ln).width);
+  c.restore(); return {w:Math.max(w,10),h:L.size*1.08*lines.length,lines};
+}
+function brushBounds(L){
+  let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
+  for(const [x,y] of L.pts){x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x);y1=Math.max(y1,y)}
+  const p=L.width/2; return {x:(x0+x1)/2+L.dx,y:(y0+y1)/2+L.dy,w:x1-x0+2*p,h:y1-y0+2*p,rot:0};
+}
+function box(L){
+  if(L.type==='brush') return brushBounds(L);
+  if(L.type==='text'){const t=textBox(L);return {x:L.x,y:L.y,w:t.w,h:t.h,rot:L.rot}}
+  if('w' in L) return {x:L.x,y:L.y,w:L.w,h:L.h,rot:L.rot||0};
+  return null;
+}
+const tiles={};
+function tile(kind,c1,c2,s){
+  s=Math.max(4,Math.round(s)); const key=[kind,c1,c2,s].join('|'); if(tiles[key]) return tiles[key];
+  const t=document.createElement('canvas'); t.width=t.height=s; const g=t.getContext('2d');
+  g.fillStyle=c1; g.fillRect(0,0,s,s); g.fillStyle=c2; g.strokeStyle=c2;
+  if(kind==='stripes'){ g.fillRect(0,0,s,s/2); }
+  else if(kind==='dots'){ g.beginPath(); g.arc(s/2,s/2,s*.22,0,2*PI); g.fill(); }
+  else if(kind==='checker'){ g.fillRect(0,0,s/2,s/2); g.fillRect(s/2,s/2,s/2,s/2); }
+  else if(kind==='grid'){ g.lineWidth=Math.max(1,s*.08); g.strokeRect(0,0,s,s); }
+  else if(kind==='zigzag'){ g.lineWidth=Math.max(1.5,s*.14); g.lineJoin='miter'; g.beginPath(); g.moveTo(0,s*.7); g.lineTo(s/2,s*.3); g.lineTo(s,s*.7); g.stroke(); }
+  else if(kind==='carbon'){
+    const h=s/2;
+    for(const [x,y,v] of [[0,0,1],[h,0,0],[0,h,0],[h,h,1]]){
+      const gr=v?g.createLinearGradient(x,y,x+h,y):g.createLinearGradient(x,y,x,y+h);
+      gr.addColorStop(0,c1); gr.addColorStop(.5,c2); gr.addColorStop(1,c1); g.fillStyle=gr; g.fillRect(x,y,h,h);
+    }
+  }
+  return tiles[key]=t;
+}
+function drawLayer(c,L){
+  if(!L.visible) return;
+  c.save(); c.globalAlpha=L.opacity??1; c.globalCompositeOperation=L.blend||'source-over';
+  const T=L.type;
+  if(T==='fill'){ c.fillStyle=L.color; c.fillRect(0,0,W,H); }
+  else if(T==='gradient'){
+    let g;
+    if(L.kind==='radial'){ g=c.createRadialGradient(W/2,H/2,0,W/2,H/2,Math.hypot(W,H)/2); }
+    else{ const a=L.angle*PI/180, dx=Math.sin(a), dy=-Math.cos(a), len=Math.abs(W*dx)+Math.abs(H*dy);
+      g=c.createLinearGradient(W/2-dx*len/2,H/2-dy*len/2,W/2+dx*len/2,H/2+dy*len/2); }
+    g.addColorStop(0,L.c1); g.addColorStop(1,L.c2); c.fillStyle=g; c.fillRect(0,0,W,H);
+  }
+  else if(T==='pattern'){
+    const p=c.createPattern(tile(L.kind,L.c1,L.c2,L.scale),'repeat');
+    try{ p.setTransform(new DOMMatrix().rotateSelf(L.angle||0)); }catch(e){}
+    c.fillStyle=p; c.fillRect(0,0,W,H);
+  }
+  else if(T==='brush'){
+    c.translate(L.dx,L.dy); c.strokeStyle=L.color; c.lineWidth=L.width; c.lineCap='round'; c.lineJoin='round';
+    c.beginPath(); L.pts.forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y));
+    if(L.pts.length===1){ c.lineTo(L.pts[0][0]+.01,L.pts[0][1]); } c.stroke();
+  }
+  else{
+    c.translate(L.x,L.y); c.rotate((L.rot||0)*PI/180);
+    if(T==='rect'||T==='ellipse'){
+      c.beginPath();
+      if(T==='ellipse') c.ellipse(0,0,L.w/2,L.h/2,0,0,2*PI);
+      else if(L.radius>0 && c.roundRect) c.roundRect(-L.w/2,-L.h/2,L.w,L.h,Math.min(L.radius,L.w/2,L.h/2));
+      else c.rect(-L.w/2,-L.h/2,L.w,L.h);
+      c.fillStyle=L.color; c.fill();
+      if(L.strokeW>0){ c.lineWidth=L.strokeW; c.strokeStyle=L.strokeC; c.stroke(); }
+    } else if(T==='text'){
+      const t=textBox(L,c); c.font=fontStr(L); c.textAlign='center'; c.textBaseline='middle'; c.fillStyle=L.color;
+      t.lines.forEach((ln,i)=>{ const y=(i-(t.lines.length-1)/2)*L.size*1.08;
+        if(L.strokeW>0){ c.lineWidth=L.strokeW; c.strokeStyle=L.strokeC; c.lineJoin='round'; c.strokeText(ln,0,y); }
+        c.fillText(ln,0,y); });
+    } else if(T==='image'){
+      const im=imgs[L.src]; if(im) c.drawImage(im,-L.w/2,-L.h/2,L.w,L.h);
+    }
+  }
+  c.restore();
+}
+function renderTo(c,useMask){
+  c.clearRect(0,0,W,H);
+  for(const L of S.layers) drawLayer(c,L);
+  const t=tpl[S.model];
+  if(useMask && t){ c.save(); c.globalCompositeOperation='destination-in'; c.drawImage(t.mask,0,0,W,H); c.restore(); }
+}
+let raf=0;
+function render(){ if(raf) return; raf=requestAnimationFrame(()=>{raf=0; renderTo(ctx,S.mask); renderOver();}); }
+function k(){ return W/over.getBoundingClientRect().width || 1; }
+function renderOver(){
+  octx.clearRect(0,0,W,H);
+  const t=tpl[S.model];
+  if(S.lines && t){ octx.save(); octx.globalAlpha=S.lineOp; octx.drawImage(t.lines,0,0,W,H); octx.restore(); }
+  const L=getSel(); if(!L) return; const b=box(L); if(!b) return;
+  const s=k(); octx.save(); octx.translate(b.x,b.y); octx.rotate(b.rot*PI/180);
+  octx.lineWidth=1.5*s; octx.setLineDash([6*s,4*s]); octx.strokeStyle='#ffffff'; octx.strokeRect(-b.w/2,-b.h/2,b.w,b.h);
+  octx.lineDashOffset=5*s; octx.strokeStyle='#3350ee'; octx.strokeRect(-b.w/2,-b.h/2,b.w,b.h); octx.setLineDash([]);
+  if(L.type!=='brush'){
+    const hr=7*s;
+    octx.beginPath(); octx.moveTo(0,-b.h/2); octx.lineTo(0,-b.h/2-28*s); octx.strokeStyle='#3350ee'; octx.stroke();
+    for(const [hx,hy,round] of [[b.w/2,b.h/2,0],[0,-b.h/2-28*s,1]]){
+      octx.beginPath(); round?octx.arc(hx,hy,hr,0,2*PI):octx.rect(hx-hr,hy-hr,hr*2,hr*2);
+      octx.fillStyle='#ffffff'; octx.fill(); octx.lineWidth=2*s; octx.strokeStyle='#3350ee'; octx.stroke();
+    }
+  }
+  octx.restore();
+}
+
+// ---------- history & storage ----------
+function snap(){ return JSON.stringify({model:S.model,layers:S.layers}); }
+let lastSnap='';
+function commit(){
+  const s=snap(); if(s===lastSnap) return; if(lastSnap) undo.push(lastSnap); if(undo.length>80) undo.shift();
+  redo=[]; lastSnap=s; persist(); syncUI();
+}
+function restore(s){ const o=JSON.parse(s); S.layers=o.layers; lastSnap=s; if(sel && !S.layers.find(l=>l.id===sel)) sel=null;
+  if(o.model!==S.model) setModel(o.model); render(); persist(); syncUI(); }
+function doUndo(){ if(!undo.length) return; redo.push(lastSnap); restore(undo.pop()); }
+function doRedo(){ if(!redo.length) return; undo.push(lastSnap); restore(redo.pop()); }
+const KEY='wrap-atolyesi-v1';
+function persist(){
+  const used={}; for(const L of S.layers) if(L.type==='image' && imgSrc[L.src]) used[L.src]=imgSrc[L.src];
+  const base={model:S.model,layers:S.layers,lines:S.lines,lineOp:S.lineOp,mask:S.mask};
+  try{ localStorage.setItem(KEY,JSON.stringify({...base,images:used})); }
+  catch(e){ try{ localStorage.setItem(KEY,JSON.stringify({...base,layers:S.layers.filter(l=>l.type!=='image'),images:{}})); }catch(_){} }
+}
+async function loadSaved(){
+  let o=null; try{ o=JSON.parse(localStorage.getItem(KEY)||'null'); }catch(e){}
+  if(!o||!Array.isArray(o.layers)) return false;
+  for(const [id,src] of Object.entries(o.images||{})){ imgSrc[id]=src; try{ imgs[id]=await loadImg(src); }catch(e){} }
+  S={...S,...o}; delete S.images; S.layers=o.layers.filter(l=>l.type!=='image'||imgs[l.src]); return true;
+}
+
+// ---------- layers ops ----------
+const getSel=()=>S.layers.find(l=>l.id===sel)||null;
+function add(L,select=true){ L.id=nid(); L.opacity??=1; L.blend??='source-over'; L.visible=true; S.layers.push(L); if(select) sel=L.id; setMode('select',true); render(); commit(); }
+function addTool(t){
+  const cx=W/2, cy=H/2;
+  if(t==='fill') add({type:'fill',name:'Renk dolgu',color:'#c8102e'});
+  if(t==='gradient') add({type:'gradient',name:'Gradyan',c1:'#ff6a00',c2:'#c8102e',angle:180,kind:'linear'});
+  if(t==='pattern') add({type:'pattern',name:'Desen',kind:'stripes',c1:'#0b0b0d',c2:'#ffffff',scale:40,angle:45,opacity:.6});
+  if(t==='rect') add({type:'rect',name:'Dikdörtgen',x:cx,y:cy,w:300,h:180,rot:0,color:'#ffd400',radius:0,strokeW:0,strokeC:'#000000'});
+  if(t==='ellipse') add({type:'ellipse',name:'Elips',x:cx,y:cy,w:240,h:240,rot:0,color:'#00a99d',strokeW:0,strokeC:'#000000'});
+  if(t==='stripe') add({type:'rect',name:'Şerit',x:cx,y:cy,w:90,h:H,rot:0,color:'#ffffff',radius:0,strokeW:0,strokeC:'#000000'});
+  if(t==='text') add({type:'text',name:'Yazı',text:'TESLA',font:'Bebas Neue',size:140,weight:400,color:'#ffffff',strokeW:0,strokeC:'#000000',x:cx,y:cy,rot:0});
+  if(t==='image') $('#fileIn').click();
+  if(t==='brush') setMode(mode==='brush'?'select':'brush');
+}
+async function addImageFile(f){
+  if(!f||!f.type.startsWith('image/')) return;
+  const url=await new Promise(r=>{const fr=new FileReader();fr.onload=()=>r(fr.result);fr.readAsDataURL(f)});
+  let im; try{ im=await loadImg(url); }catch(e){ toast('Bu görsel açılamadı'); return; }
+  // shrink very large images to keep the draft light
+  const max=1400, sc=Math.min(1,max/Math.max(im.naturalWidth,im.naturalHeight));
+  let src=url;
+  if(sc<1 || f.size>1.5e6){ const c=document.createElement('canvas'); c.width=Math.round(im.naturalWidth*sc); c.height=Math.round(im.naturalHeight*sc);
+    c.getContext('2d').drawImage(im,0,0,c.width,c.height); src=c.toDataURL(f.type==='image/png'?'image/png':'image/jpeg',.9); im=await loadImg(src); }
+  const id='img'+Date.now().toString(36); imgs[id]=im; imgSrc[id]=src;
+  const r=im.naturalWidth/im.naturalHeight; let w=Math.min(W*.6,600), h=w/r; if(h>H*.6){h=H*.6;w=h*r}
+  add({type:'image',name:(f.name||'Görsel').replace(/\.[^.]+$/,'').slice(0,28),src:id,x:W/2,y:H/2,w,h,rot:0});
+}
+function dup(){ const L=getSel(); if(!L) return; const c=JSON.parse(JSON.stringify(L)); c.name=L.name+' kopya';
+  if('x' in c){c.x+=24;c.y+=24} if(c.type==='brush'){c.dx+=24;c.dy+=24}
+  const i=S.layers.indexOf(L); c.id=nid(); S.layers.splice(i+1,0,c); sel=c.id; render(); commit(); }
+function del(id){ const i=S.layers.findIndex(l=>l.id===(id||sel)); if(i<0) return; S.layers.splice(i,1); if(sel===(id||sel)) sel=null; render(); commit(); }
+function move(id,d){ const i=S.layers.findIndex(l=>l.id===id), j=i+d; if(i<0||j<0||j>=S.layers.length) return;
+  [S.layers[i],S.layers[j]]=[S.layers[j],S.layers[i]]; render(); commit(); }
+function toEdge(id,top){ const i=S.layers.findIndex(l=>l.id===id); if(i<0) return; const [L]=S.layers.splice(i,1); top?S.layers.push(L):S.layers.unshift(L); render(); commit(); }
+
+// ---------- pointer ----------
+function pt(e){ const r=over.getBoundingClientRect(); return {x:(e.clientX-r.left)*W/r.width, y:(e.clientY-r.top)*H/r.height}; }
+function local(b,p){ const a=-b.rot*PI/180, dx=p.x-b.x, dy=p.y-b.y; return {x:dx*Math.cos(a)-dy*Math.sin(a), y:dx*Math.sin(a)+dy*Math.cos(a)}; }
+function hitBox(b,p,pad=0){ const l=local(b,p); return Math.abs(l.x)<=b.w/2+pad && Math.abs(l.y)<=b.h/2+pad; }
+let op=null; const HIT=matchMedia('(pointer:coarse)').matches?26:14;
+over.addEventListener('pointerdown',e=>{
+  const p=pt(e); over.setPointerCapture(e.pointerId);
+  if(mode==='brush'){
+    const L={id:nid(),type:'brush',name:'Fırça çizgisi',pts:[[p.x,p.y]],dx:0,dy:0,color:brush.color,width:brush.width,opacity:1,blend:'source-over',visible:true};
+    S.layers.push(L); op={t:'draw',L}; render(); return;
+  }
+  const s=k(), cur=getSel();
+  if(cur && cur.type!=='brush'){
+    const b=box(cur), l=local(b,p);
+    if(Math.hypot(l.x,l.y+b.h/2+28*s)<HIT*s){ op={t:'rot',L:cur}; return; }
+    if(Math.abs(l.x-b.w/2)<HIT*s && Math.abs(l.y-b.h/2)<HIT*s){ op={t:'size',L:cur,b0:{...b},size0:cur.size}; return; }
+  }
+  for(let i=S.layers.length-1;i>=0;i--){
+    const L=S.layers[i]; if(!L.visible) continue; const b=box(L); if(!b) continue;
+    if(hitBox(b,p,4*s)){ sel=L.id; op={t:'move',L,p0:p,o:L.type==='brush'?{x:L.dx,y:L.dy}:{x:L.x,y:L.y}}; syncUI(); render(); return; }
+  }
+  sel=null; syncUI(); render();
+});
+over.addEventListener('pointermove',e=>{
+  if(!op) return; const p=pt(e), L=op.L;
+  if(op.t==='draw'){ const last=L.pts[L.pts.length-1]; if(Math.hypot(p.x-last[0],p.y-last[1])>1.5) L.pts.push([Math.round(p.x*10)/10,Math.round(p.y*10)/10]); }
+  else if(op.t==='move'){ const nx=op.o.x+p.x-op.p0.x, ny=op.o.y+p.y-op.p0.y;
+    if(L.type==='brush'){L.dx=nx;L.dy=ny}else{L.x=Math.round(nx);L.y=Math.round(ny)} }
+  else if(op.t==='rot'){ let a=Math.atan2(p.y-L.y,p.x-L.x)*180/PI+90; if(e.shiftKey) a=Math.round(a/15)*15; a=((Math.round(a)%360)+540)%360-180; L.rot=a; }
+  else if(op.t==='size'){
+    const b=op.b0, l=local(b,p); let w=Math.max(8,2*Math.abs(l.x)), h=Math.max(8,2*Math.abs(l.y));
+    if(L.type==='text'){ L.size=Math.max(8,Math.round(op.size0*h/b.h)); }
+    else{ if(L.type==='image' && !e.shiftKey){ const r=b.w/b.h; if(w/h>r) h=w/r; else w=h*r; } L.w=Math.round(w); L.h=Math.round(h); }
+  }
+  render(); if(op.t!=='draw') liveProps();
+});
+function endOp(){ if(!op) return; const t=op.t; op=null; if(t==='draw') syncUI(); commit(); }
+over.addEventListener('pointerup',endOp); over.addEventListener('pointercancel',endOp);
+
+// drop / paste
+const stage=$('#stage');
+stage.addEventListener('dragover',e=>{e.preventDefault();stage.classList.add('drop')});
+stage.addEventListener('dragleave',()=>stage.classList.remove('drop'));
+stage.addEventListener('drop',e=>{e.preventDefault();stage.classList.remove('drop');addImageFile(e.dataTransfer.files[0])});
+document.addEventListener('paste',e=>{ if(e.target.closest('input,textarea')) return; const f=[...(e.clipboardData?.files||[])][0]; if(f) addImageFile(f); });
+$('#fileIn').addEventListener('change',e=>{ addImageFile(e.target.files[0]); e.target.value=''; });
+
+// keys
+document.addEventListener('keydown',e=>{
+  if(e.target.closest('input,textarea,select')) return;
+  const mod=e.ctrlKey||e.metaKey, kk=e.key.toLowerCase();
+  if(mod&&kk==='z'){ e.preventDefault(); e.shiftKey?doRedo():doUndo(); return; }
+  if(mod&&kk==='y'){ e.preventDefault(); doRedo(); return; }
+  if(mod&&kk==='d'){ e.preventDefault(); dup(); return; }
+  if(e.key==='Escape'){ if(!$('#modelSheet').hidden||!$('#exportSheet').hidden){closeSheets();return} sel=null; setMode('select'); syncUI(); render(); return; }
+  const L=getSel(); if(!L) return;
+  if(e.key==='Delete'||e.key==='Backspace'){ e.preventDefault(); del(); return; }
+  const st=e.shiftKey?10:1, m={ArrowLeft:[-st,0],ArrowRight:[st,0],ArrowUp:[0,-st],ArrowDown:[0,st]}[e.key];
+  if(m){ e.preventDefault(); if(L.type==='brush'){L.dx+=m[0];L.dy+=m[1]} else if('x' in L){L.x+=m[0];L.y+=m[1]} render(); liveProps(); clearTimeout(keyT); keyT=setTimeout(commit,400); }
+});
+let keyT;
+
+// ---------- UI: tools ----------
+const TOOLS=[['fill','Renk'],['gradient','Gradyan'],['pattern','Desen'],['rect','Kutu'],['ellipse','Daire'],['stripe','Şerit'],['text','Yazı'],['image','Görsel'],['brush','Fırça']];
+$('#tools').innerHTML=TOOLS.map(([t,l])=>`<button class="tool" data-tool="${t}" ${t==='brush'?'aria-pressed="false"':''}>${svg(ICON[t])}${l}</button>`).join('');
+$('#tools').addEventListener('click',e=>{ const b=e.target.closest('[data-tool]'); if(b) addTool(b.dataset.tool); });
+function setMode(m,silent){ mode=m; over.classList.toggle('brush',m==='brush'); const b=$('[data-tool=brush]'); if(b) b.setAttribute('aria-pressed',m==='brush'); if(m==='brush') sel=null; if(!silent){syncUI();render();} }
+
+// ---------- UI: layers ----------
+function thumb(c,L){
+  const g=c.getContext('2d'); g.clearRect(0,0,c.width,c.height); g.save(); const s=c.width/Math.max(W,H); g.scale(s,s);
+  g.translate((Math.max(W,H)-W)/2,(Math.max(W,H)-H)/2); drawLayer(g,{...L,visible:true,opacity:Math.max(.35,L.opacity??1),blend:'source-over'}); g.restore();
+}
+function renderLayers(){
+  const el=$('#layers');
+  if(!S.layers.length){ el.innerHTML='<div class="empty">Henüz katman yok. Soldaki araçlardan birini seç ya da bir görseli tasarım alanına sürükle.</div>'; return; }
+  el.innerHTML=[...S.layers].reverse().map(L=>`<div class="layer${L.id===sel?' sel':''}${L.visible?'':' hidden'}" data-id="${L.id}">
+    <canvas width="68" height="68"></canvas>
+    <div class="nm">${esc(L.name||TYPE_TR[L.type])}<small>${TYPE_TR[L.type]}</small></div>
+    <div class="acts">
+      <button class="mini" data-act="vis" title="${L.visible?'Gizle':'Göster'}" aria-label="${L.visible?'Gizle':'Göster'}">${svg(L.visible?'<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>':'<path d="M3 3l18 18M10.6 5.1A10 10 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-3 3.9M6.6 6.6C3.8 8.3 2 12 2 12s3.5 7 10 7c1.7 0 3.2-.4 4.5-1.1"/>')}</button>
+      <button class="mini" data-act="up" title="Yukarı" aria-label="Yukarı taşı">${svg('<path d="m6 15 6-6 6 6"/>')}</button>
+      <button class="mini" data-act="down" title="Aşağı" aria-label="Aşağı taşı">${svg('<path d="m6 9 6 6 6-6"/>')}</button>
+    </div></div>`).join('');
+  el.querySelectorAll('.layer').forEach(row=>thumb(row.querySelector('canvas'),S.layers.find(l=>l.id===row.dataset.id)));
+}
+$('#layers').addEventListener('click',e=>{
+  const row=e.target.closest('.layer'); if(!row) return; const id=row.dataset.id, L=S.layers.find(l=>l.id===id), act=e.target.closest('[data-act]')?.dataset.act;
+  if(act==='vis'){ L.visible=!L.visible; render(); commit(); return; }
+  if(act==='up'){ move(id,1); return; } if(act==='down'){ move(id,-1); return; }
+  sel=id; setMode('select',true); syncUI(); render();
+});
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+// ---------- UI: properties ----------
+const BLEND=[['source-over','Normal'],['multiply','Çarp'],['screen','Ekran'],['overlay','Bindirme'],['soft-light','Yumuşak ışık'],['color-dodge','Renk soldurma'],['difference','Fark']];
+const PKIND=[['stripes','Çizgili'],['dots','Puantiye'],['checker','Dama'],['carbon','Karbon'],['grid','Izgara'],['zigzag','Zikzak']];
+const pos=()=>[{k:'x',l:'X',t:'range',min:-200,max:W+200,step:1},{k:'y',l:'Y',t:'range',min:-200,max:H+200,step:1}];
+const sizeF=()=>[{k:'w',l:'Genişlik',t:'range',min:4,max:Math.max(W,H)*1.5,step:1},{k:'h',l:'Yükseklik',t:'range',min:4,max:Math.max(W,H)*1.5,step:1}];
+const rotF={k:'rot',l:'Açı',t:'range',min:-180,max:180,step:1};
+const strokeF=[{k:'strokeW',l:'Kontur',t:'range',min:0,max:40,step:1},{k:'strokeC',l:'Kontur rengi',t:'color'}];
+function schema(L){
+  const T=L.type, top=[{k:'name',l:'Ad',t:'text'}];
+  const tail=[{k:'opacity',l:'Opaklık',t:'range',min:0,max:1,step:.01},{k:'blend',l:'Karışım',t:'select',o:BLEND}];
+  let mid=[];
+  if(T==='fill') mid=[{k:'color',l:'Renk',t:'color'}];
+  if(T==='gradient') mid=[{k:'c1',l:'Başlangıç',t:'color'},{k:'c2',l:'Bitiş',t:'color'},{k:'kind',l:'Tür',t:'select',o:[['linear','Doğrusal'],['radial','Dairesel']]},{k:'angle',l:'Açı',t:'range',min:0,max:360,step:1}];
+  if(T==='pattern') mid=[{k:'kind',l:'Desen',t:'select',o:PKIND},{k:'c1',l:'Zemin',t:'color'},{k:'c2',l:'Desen rengi',t:'color'},{k:'scale',l:'Ölçek',t:'range',min:6,max:240,step:1},{k:'angle',l:'Açı',t:'range',min:0,max:180,step:1}];
+  if(T==='rect') mid=[{k:'color',l:'Renk',t:'color'},...pos(),...sizeF(),rotF,{k:'radius',l:'Köşe',t:'range',min:0,max:400,step:1},...strokeF];
+  if(T==='ellipse') mid=[{k:'color',l:'Renk',t:'color'},...pos(),...sizeF(),rotF,...strokeF];
+  if(T==='text') mid=[{k:'text',l:'Metin',t:'area'},{k:'font',l:'Yazı tipi',t:'select',o:FONTS.map(f=>[f,f])},{k:'weight',l:'Kalınlık',t:'select',o:[[400,'Normal'],[700,'Kalın'],[900,'Siyah']]},{k:'size',l:'Boyut',t:'range',min:8,max:700,step:1},{k:'color',l:'Renk',t:'color'},...pos(),rotF,...strokeF];
+  if(T==='image') mid=[...pos(),...sizeF(),rotF];
+  if(T==='brush') mid=[{k:'color',l:'Renk',t:'color'},{k:'width',l:'Kalınlık',t:'range',min:1,max:200,step:1}];
+  return [...top,...mid,...tail];
+}
+function fieldHTML(f,v){
+  const id='p_'+f.k;
+  if(f.t==='text') return `<label class="field"><span>${f.l}</span><input type="text" id="${id}" data-k="${f.k}" value="${esc(v??'')}"></label>`;
+  if(f.t==='area') return `<label class="field"><span>${f.l}</span><textarea id="${id}" data-k="${f.k}" rows="2">${esc(v??'')}</textarea></label>`;
+  if(f.t==='select') return `<label class="field"><span>${f.l}</span><select id="${id}" data-k="${f.k}">${f.o.map(([val,t])=>`<option value="${val}"${String(val)===String(v)?' selected':''}>${t}</option>`).join('')}</select></label>`;
+  if(f.t==='color') return `<div class="field"><span>${f.l}</span><div style="display:flex;flex-direction:column;gap:6px;min-width:0"><div class="clr"><input type="color" id="${id}" data-k="${f.k}" value="${v}" aria-label="${f.l}"><input type="text" id="${id}_hex" data-k="${f.k}" data-hex value="${v}" maxlength="7" aria-label="${f.l} kodu"></div>
+    <div class="swatches">${SWATCHES.map(c=>`<button class="sw" style="background:${c}" data-k="${f.k}" data-sw="${c}" aria-label="${c}"></button>`).join('')}</div></div></div>`;
+  if(f.t==='range'){ const dv=f.step<1?Number(v).toFixed(2):Math.round(v);
+    return `<div class="field"><span>${f.l}</span><div class="rng"><input type="range" id="${id}" data-k="${f.k}" min="${f.min}" max="${f.max}" step="${f.step}" value="${v}" aria-label="${f.l}"><input type="number" id="${id}_n" data-k="${f.k}" step="${f.step}" value="${dv}" aria-label="${f.l} değeri"></div></div>`; }
+}
+function renderProps(){
+  const el=$('#props'), L=getSel();
+  if(mode==='brush'){
+    $('#propsTitle').textContent='Fırça';
+    el.innerHTML=fieldHTML({k:'bcolor',l:'Renk',t:'color'},brush.color)+fieldHTML({k:'bwidth',l:'Kalınlık',t:'range',min:1,max:200,step:1},brush.width)+
+      '<p class="spec">Tasarım alanında sürükleyerek çiz. Her çizgi ayrı bir katman olur. Bitirince Fırça düğmesine tekrar bas.</p>';
+    return;
+  }
+  if(!L){
+    $('#propsTitle').textContent='Tasarım';
+    const m=MODELS.find(x=>x.id===S.model);
+    el.innerHTML=`<p class="spec" style="font-family:var(--f-ui);font-size:13px;color:var(--fg)">Bir katman seçince ayarları burada açılır.</p>
+      <div class="spec">Şablon: ${m.n} ${m.s}<br>Boyut: ${W} × ${H} px<br>Katman: ${S.layers.length}</div>
+      <div class="sep"></div>
+      <h2>Tesla kuralları</h2>
+      <div class="spec">PNG · 512–1024 px · en fazla 1 MB<br>Dosya adı: harf, rakam, _ - boşluk, en çok 30 karakter<br>Uygulamadan 10, USB'den 10 wrap</div>`;
+    return;
+  }
+  $('#propsTitle').textContent=TYPE_TR[L.type];
+  el.innerHTML=schema(L).map(f=>fieldHTML(f,L[f.k])).join('')+
+   `<div class="sep"></div><div class="rowbtns">
+     ${L.type==='image'?'<button class="btn" data-pa="cover">Alanı kapla</button>':''}
+     ${'x' in L?'<button class="btn" data-pa="center">Ortala</button>':''}
+     <button class="btn" data-pa="front">En öne</button><button class="btn" data-pa="back">En arkaya</button>
+     <button class="btn" data-pa="dup">Çoğalt</button><button class="btn danger" data-pa="del">Sil</button></div>`;
+}
+function liveProps(){ const L=getSel(); if(!L) return; for(const f of schema(L)){ if(f.t!=='range') continue; const r=document.getElementById('p_'+f.k), n=document.getElementById('p_'+f.k+'_n'); if(r&&document.activeElement!==r) r.value=L[f.k]; if(n&&document.activeElement!==n) n.value=f.step<1?Number(L[f.k]).toFixed(2):Math.round(L[f.k]); } }
+function applyInput(t){
+  const k_=t.dataset.k; if(!k_) return;
+  let v=t.dataset.sw ?? t.value;
+  if(t.dataset.hex!==undefined){ if(!/^#[0-9a-fA-F]{6}$/.test(v)) return; }
+  if(t.type==='range'||t.type==='number'||k_==='weight') v=Number(v);
+  if(mode==='brush'){ if(k_==='bcolor') brush.color=v; if(k_==='bwidth') brush.width=v; syncField(k_,v); return; }
+  const L=getSel(); if(!L) return; L[k_]=v; syncField(k_,v);
+  if(k_==='name') renderLayersSoon(); render();
+}
+function syncField(k_,v){
+  const a=document.getElementById('p_'+k_), b=document.getElementById('p_'+k_+'_n'), h=document.getElementById('p_'+k_+'_hex');
+  if(a && document.activeElement!==a && a.type!=='text') a.value=v; if(b && document.activeElement!==b) b.value=v; if(h && document.activeElement!==h) h.value=v;
+}
+let lrT; function renderLayersSoon(){ clearTimeout(lrT); lrT=setTimeout(renderLayers,250); }
+const props=$('#props');
+props.addEventListener('input',e=>applyInput(e.target));
+props.addEventListener('change',()=>{ if(mode!=='brush'){ commit(); } });
+props.addEventListener('click',e=>{
+  const sw=e.target.closest('[data-sw]'); if(sw){ applyInput(sw); if(mode!=='brush') commit(); return; }
+  const a=e.target.closest('[data-pa]')?.dataset.pa; if(!a) return; const L=getSel(); if(!L) return;
+  if(a==='del') return del(); if(a==='dup') return dup();
+  if(a==='front') return toEdge(L.id,true); if(a==='back') return toEdge(L.id,false);
+  if(a==='center'){ L.x=W/2; L.y=H/2; }
+  if(a==='cover'){ const im=imgs[L.src], r=im.naturalWidth/im.naturalHeight; let w=W,h=W/r; if(h<H){h=H;w=H*r} L.w=Math.round(w);L.h=Math.round(h);L.x=W/2;L.y=H/2;L.rot=0; }
+  render(); renderProps(); commit();
+});
+
+function syncUI(){ renderLayers(); renderProps(); $('#undoBtn').disabled=!undo.length; $('#redoBtn').disabled=!redo.length; }
+
+// ---------- view options ----------
+$('#optLines').addEventListener('change',e=>{S.lines=e.target.checked;render();persist()});
+$('#optLineOp').addEventListener('input',e=>{S.lineOp=+e.target.value;render()});
+$('#optLineOp').addEventListener('change',persist);
+$('#optMask').addEventListener('change',e=>{S.mask=e.target.checked;render();persist()});
+window.addEventListener('resize',render);
+
+// ---------- header ----------
+$('#undoBtn').onclick=doUndo; $('#redoBtn').onclick=doRedo;
+let newArm=0;
+$('#newBtn').onclick=e=>{
+  const b=e.currentTarget;
+  if(!newArm){ newArm=1; b.textContent='Tümü silinsin mi? Evet'; b.classList.add('danger'); setTimeout(()=>{newArm=0;b.textContent='Yeni';b.classList.remove('danger')},3500); return; }
+  newArm=0; b.textContent='Yeni'; b.classList.remove('danger'); S.layers=[]; sel=null;
+  add({type:'fill',name:'Zemin',color:'#ffffff'},false); toast('Boş tuval açıldı');
+};
+function openSheet(id){ $(id).hidden=false; }
+function closeSheets(){ $('#modelSheet').hidden=true; $('#exportSheet').hidden=true; }
+document.querySelectorAll('.scrim').forEach(s=>s.addEventListener('click',e=>{ if(e.target===s||e.target.closest('[data-close]')) closeSheets(); }));
+$('#modelBtn').onclick=()=>{
+  $('#models').innerHTML=MODELS.map(m=>`<button class="mcard" data-m="${m.id}" aria-pressed="${m.id===S.model}"><img src="${asset(m.id+'-car')}" alt="" loading="lazy"><b>${m.n}</b><small>${m.s||'Tüm versiyonlar'}</small></button>`).join('');
+  openSheet('#modelSheet');
+};
+$('#models').addEventListener('click',e=>{ const b=e.target.closest('[data-m]'); if(!b) return; closeSheets(); setModel(b.dataset.m,true).then(syncUI); });
+
+// ---------- export ----------
+let expBlob=null, expUrl=null;
+async function buildExport(){
+  const c=document.createElement('canvas'); c.width=W; c.height=H; const g=c.getContext('2d');
+  renderTo(g,S.mask);
+  const toBlob=cv=>new Promise(r=>cv.toBlob(r,'image/png'));
+  let b=await toBlob(c), w=W, h=H, shrunk=false;
+  for(const target of [768,512]){
+    if(b.size<=1e6) break;
+    const s=target/Math.max(W,H), cc=document.createElement('canvas'); cc.width=Math.round(W*s); cc.height=Math.round(H*s);
+    const gg=cc.getContext('2d'); gg.imageSmoothingQuality='high'; gg.drawImage(c,0,0,cc.width,cc.height); b=await toBlob(cc); w=cc.width; h=cc.height; shrunk=true;
+  }
+  return {b,w,h,shrunk};
+}
+$('#exportBtn').onclick=async()=>{
+  openSheet('#exportSheet'); $('#expStatus').textContent='Hazırlanıyor…'; $('#expStatus').className='status';
+  const r=await buildExport(); expBlob=r.b; if(expUrl) URL.revokeObjectURL(expUrl); expUrl=URL.createObjectURL(r.b); $('#expPrev').src=expUrl;
+  const kb=(r.b.size/1024).toFixed(0), ok=r.b.size<=1e6;
+  $('#expSpec').innerHTML=`${r.w} × ${r.h} px · ${kb} KB ${ok?'· Tesla sınırının içinde':'· 1 MB sınırını aşıyor, desen yoğunluğunu azalt'}${r.shrunk?'<br>1 MB sınırı için otomatik küçültüldü.':''}${S.mask?'<br>Panel dışı şeffaf.':''}`;
+  $('#expStatus').textContent='';
+};
+function cleanName(){ const v=$('#expName').value.trim(); return v; }
+$('#expSave').onclick=async()=>{
+  const st=$('#expStatus'), name=cleanName();
+  if(!/^[A-Za-z0-9_\- ]{1,30}$/.test(name)){ st.textContent='Dosya adında yalnızca İngilizce harf, rakam, alt çizgi, tire ve boşluk olabilir (en çok 30 karakter). Ö, ş, ç gibi harfleri değiştir.'; st.className='status err'; return; }
+  if(!expBlob) return;
+  const file=new File([expBlob],name+'.png',{type:'image/png'});
+  try{
+    if(navigator.canShare && navigator.canShare({files:[file]})){
+      await navigator.share({files:[file]});
+      st.textContent='Paylaşım menüsünden "Dosyalar\'a Kaydet" ya da Tesla uygulamasını seçebilirsin.'; st.className='status ok'; return;
+    }
+  }catch(e){ if(e&&e.name==='AbortError'){ st.textContent='Kaydetme iptal edildi.'; st.className='status'; return; } }
+  const a=document.createElement('a'); a.href=URL.createObjectURL(file); a.download=name+'.png'; document.body.appendChild(a); a.click();
+  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},4000);
+  st.textContent='İndirildi: '+name+'.png. İndirme başlamadıysa önizlemeye uzun basıp "Fotoğraflara Kaydet" de.'; st.className='status ok';
+};
+
+let toastT; function toast(m){ let t=$('.toast'); if(!t){t=document.createElement('div');t.className='toast';t.setAttribute('role','status');document.body.appendChild(t)} t.textContent=m; t.hidden=false; clearTimeout(toastT); toastT=setTimeout(()=>t.hidden=true,2200); }
+
+// ---------- word → design engine (works offline) ----------
+const COLORS={kırmızı:'#c8102e',kirmizi:'#c8102e',red:'#c8102e',bordo:'#6d0f1f',şarap:'#6d0f1f',turuncu:'#ff6a00',orange:'#ff6a00',sarı:'#ffd400',sari:'#ffd400',yellow:'#ffd400',altın:'#c9a227',altin:'#c9a227',gold:'#c9a227',
+  yeşil:'#2e9d4a',yesil:'#2e9d4a',green:'#2e9d4a',haki:'#5b6b3a',zeytin:'#5b6b3a',nane:'#6fe3c1',turkuaz:'#00b3b3',turquoise:'#00b3b3',mavi:'#1e6bff',blue:'#1e6bff',lacivert:'#0c1f4a',navy:'#0c1f4a',
+  mor:'#6a2dbd',purple:'#6a2dbd',lila:'#b48ee8',pembe:'#ff4fa3',pink:'#ff4fa3',siyah:'#0b0b0d',black:'#0b0b0d',beyaz:'#ffffff',white:'#ffffff',gri:'#8a929b',grey:'#8a929b',gray:'#8a929b',
+  gümüş:'#c0c6cc',gumus:'#c0c6cc',silver:'#c0c6cc',kahve:'#5a3a22',brown:'#5a3a22',bej:'#d9c7a3',krem:'#efe6d2',neon:'#39ff14',bronz:'#a0602e',bakır:'#b8642f',bakir:'#b8642f',füme:'#3a3f46',fume:'#3a3f46'};
+const THEMES={
+  race:['yarış','yaris','race','racing','spor','sport','rally','ralli','hız','hiz','şerit','serit','stripe','gt','drift','pist'],
+  carbon:['karbon','carbon','fiber'],
+  camo:['kamuflaj','kamufle','camo','asker','ordu','military','askeri'],
+  sunset:['gün batımı','günbatımı','gunbatimi','gun batimi','sunset','akşam','aksam','şafak','safak','gündoğumu'],
+  ocean:['okyanus','deniz','dalga','ocean','sea','wave','su','mavi deniz'],
+  space:['uzay','galaksi','yıldız','yildiz','space','galaxy','star','gece','night','kozmik','cosmic','nebula'],
+  fire:['ateş','ates','alev','lav','fire','flame','yanardağ','volkan','cehennem'],
+  ice:['buz','kar','kış','kis','ice','snow','frost','kristal','soğuk','soguk'],
+  forest:['orman','doğa','doga','yaprak','ağaç','agac','forest','nature','leaf','bahar','yeşillik'],
+  retro:['retro','80','80ler','synth','synthwave','vapor','nostalji','nostaljik','miami'],
+  minimal:['minimal','sade','mat','basit','clean','şık','sik','zarif'],
+  geometric:['geometri','geometrik','geo','üçgen','ucgen','kare','poligon','soyut','abstract','modern','kübist'],
+  dots:['puantiye','nokta','benek','dots','polka','benekli'],
+  stripes:['çizgi','cizgi','çizgili','cizgili','stripes','zebra','çubuk'],
+  checker:['dama','damalı','satranç','satranc','checker','ekose','kareli'],
+  zigzag:['zikzak','zigzag','zig'],
+  graffiti:['graffiti','grafiti','sokak','street','sprey','spray','duvar'],
+  luxury:['lüks','luks','lux','luxury','premium','elegan','asil','klasik','vip'],
+  rainbow:['gökkuşağı','gokkusagi','rainbow','renkli','pride','alaca','cıvıl'],
+  gradient:['degrade','gradyan','geçiş','gecis','gradient','ombre','renk geçişi']
+};
+const THEME_TR={race:'Yarış',carbon:'Karbon',camo:'Kamuflaj',sunset:'Gün batımı',ocean:'Okyanus',space:'Uzay',fire:'Ateş',ice:'Buz',forest:'Orman',retro:'Retro',minimal:'Minimal',geometric:'Geometrik',dots:'Puantiye',stripes:'Çizgili',checker:'Dama',zigzag:'Zikzak',graffiti:'Graffiti',luxury:'Lüks',rainbow:'Gökkuşağı',gradient:'Degrade'};
+const TEXTURE=new Set(['carbon','dots','stripes','checker','zigzag']);
+const CHIPS=['yarış','karbon','kamuflaj','uzay','okyanus','gün batımı','retro','lüks','graffiti','geometrik','ateş','buz','minimal'];
+
+function rng(seed){ let a=seed>>>0; return ()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}; }
+const norm=s=>s.toLocaleLowerCase('tr').replace(/[.,;:!?()]/g,' ');
+function matchKey(word,key){ if(key.length<=3) return word===key||word===key+'lı'||word===key+'li'||word===key+'lu'||word===key+'lü'; return word.startsWith(key); }
+function parseWords(raw){
+  const txt=[]; raw=raw.replace(/["“”'‘’«»]([^"“”'‘’«»]{1,24})["“”'‘’«»]/g,(_,t)=>{txt.push(t.trim());return ' '});
+  const n=norm(raw), words=n.split(/\s+/).filter(Boolean);
+  const cols=[], themes=[];
+  words.forEach(w=>{ for(const [k,v] of Object.entries(COLORS)) if(matchKey(w,k)){ if(!cols.includes(v)) cols.push(v); break; } });
+  for(const [t,keys] of Object.entries(THEMES)){
+    if(keys.some(key=>key.includes(' ')?n.includes(key):words.some(w=>matchKey(w,key)))) themes.push(t);
+  }
+  const num=words.find(w=>/^\d{1,3}$/.test(w)&&w!=='80'); if(!txt.length&&num) txt.push(num);
+  return {cols,themes,text:txt[0]||''};
+}
+function shade(hex,amt){ const n=parseInt(hex.slice(1),16); let r=n>>16,g=n>>8&255,b=n&255;
+  const f=amt<0?0:255, p=Math.abs(amt); r=Math.round(r+(f-r)*p); g=Math.round(g+(f-g)*p); b=Math.round(b+(f-b)*p);
+  return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1); }
+const lum=h=>{const n=parseInt(h.slice(1),16);return ((n>>16)*.299+(n>>8&255)*.587+(n&255)*.114)/255};
+const L_=o=>({opacity:1,blend:'source-over',visible:true,rot:0,...o});
+const Fl=(color,name='Zemin')=>L_({type:'fill',name,color});
+const Gr=(c1,c2,angle,kind='linear',name='Gradyan')=>L_({type:'gradient',name,c1,c2,angle,kind});
+const Pt=(kind,c1,c2,scale,angle,opacity,blend='source-over')=>L_({type:'pattern',name:'Desen',kind,c1,c2,scale,angle,opacity,blend});
+const Rc=(x,y,w,h,color,o={})=>L_({type:'rect',name:'Şerit',x,y,w,h,color,radius:0,strokeW:0,strokeC:'#000000',...o});
+const El=(x,y,w,h,color,o={})=>L_({type:'ellipse',name:'Şekil',x,y,w,h,color,strokeW:0,strokeC:'#000000',...o});
+const Tx=(text,x,y,size,color,font,rot,o={})=>L_({type:'text',name:'Yazı',text,x,y,size,color,font,weight:font==='Figtree'||font==='Unbounded'?900:400,rot,strokeW:0,strokeC:'#000000',...o});
+const Br=(pts,color,width,o={})=>L_({type:'brush',name:'Fırça',pts,dx:0,dy:0,color,width,...o});
+
+const GEN={
+  race(r,p){ const g=20+r()*30, w=26+r()*36, out=[Fl(p[0],'Gövde rengi'),
+      Rc(W/2-g/2-w/2,H/2,w,H,p[1],{name:'Yarış şeridi'}),Rc(W/2+g/2+w/2,H/2,w,H,p[1],{name:'Yarış şeridi'})];
+    if(r()>.4) out.push(Rc(W/2-g/2-w-10,H/2,5,H,p[2],{name:'İnce çizgi'}),Rc(W/2+g/2+w+10,H/2,5,H,p[2],{name:'İnce çizgi'}));
+    if(r()>.5) out.push(Rc(W*.155,H/2,24+r()*20,H*.9,p[1],{name:'Yan şerit'}),Rc(W*.845,H/2,24+r()*20,H*.9,p[1],{name:'Yan şerit'}));
+    return out; },
+  carbon(r,p){ const d=lum(p[0])>.5?'#15171b':p[0]; return [Fl(d,'Karbon zemin'),Pt('carbon',d,shade(d,.35),16+r()*16,45,.85),
+      Rc(W/2,H/2,10+r()*14,H,p[1],{name:'Orta çizgi'})]; },
+  camo(r,p){ const cs=p.length>=3?p:['#4b5320','#7a7a52','#2f3a1f','#a39a6b']; const out=[Fl(cs[0],'Kamuflaj zemini')];
+    for(let i=0;i<80;i++) out.push(El(r()*W,r()*H,50+r()*150,30+r()*90,cs[1+(i%(cs.length-1))],{rot:Math.round(r()*180-90),name:'Leke'})); return out; },
+  sunset(r,p){ const c1=p[0]||'#ff7a18', c2=p[1]||'#7b2ff7', out=[Gr(c1,c2,180,'linear','Gökyüzü')];
+    out.push(El(W/2,H*.2,260+r()*120,260+r()*120,shade(c1,.35),{opacity:.9,name:'Güneş'}));
+    const d=shade(c2,-.55); for(let i=0;i<6;i++){ out.push(Rc(W/2,H*.62+i*H*.07,W,4+i*7,d,{name:'Ufuk çizgisi',opacity:.85})); } return out; },
+  ocean(r,p){ const c1=p[0]||'#0c1f4a', c2=p[1]||'#00b3b3', out=[Gr(c1,c2,180+Math.round(r()*30-15),'linear','Derin su')];
+    for(let i=0;i<9;i++){ const y0=H*(.08+i*.11), a=10+r()*25, f=1.5+r()*2.5, ph=r()*6, pts=[];
+      for(let x=-20;x<=W+20;x+=16) pts.push([x,Math.round(y0+Math.sin(x/W*PI*f+ph)*a)]);
+      out.push(Br(pts,i%3?'#ffffff':(p[2]||'#6fe3c1'),4+r()*10,{opacity:.35+r()*.45,name:'Dalga'})); } return out; },
+  space(r,p){ const out=[Gr(p[0]&&lum(p[0])<.3?p[0]:'#1a1440','#05050a',0,'radial','Uzay boşluğu')];
+    const neb=p.length?p:['#6a2dbd','#ff4fa3','#1e6bff'];
+    for(let i=0;i<4;i++) out.push(El(r()*W,r()*H,300+r()*300,200+r()*250,neb[i%neb.length],{opacity:.22,blend:'screen',rot:Math.round(r()*180),name:'Bulutsu'}));
+    for(let i=0;i<140;i++){ const s=1.5+r()*r()*7; out.push(El(Math.round(r()*W),Math.round(r()*H),s,s,'#ffffff',{opacity:.5+r()*.5,name:'Yıldız'})); } return out; },
+  fire(r,p){ const base=p[0]&&lum(p[0])<.25?p[0]:'#120404', out=[Fl(base,'Zemin'),Gr(p[1]||'#c8102e','#120404',180,'linear','Kızıllık')];
+    out[1].opacity=.9; const fc=['#ff6a00','#ffd400','#c8102e',...p];
+    for(let i=0;i<40;i++){ const h=120+r()*320; out.push(El(r()*W,H*.05+r()*H*.45,30+r()*70,h,fc[i%fc.length],{opacity:.35+r()*.4,blend:'screen',rot:Math.round(r()*30-15),name:'Alev'})); } return out; },
+  ice(r,p){ const out=[Gr(p[0]||'#e8f7ff',p[1]||'#7fd3ff',160,'linear','Buz')];
+    for(let i=0;i<26;i++) out.push(Rc(r()*W,r()*H,20+r()*90,120+r()*320,'#ffffff',{opacity:.18+r()*.35,rot:Math.round(r()*180-90),name:'Kristal'}));
+    out.push(Pt('grid','#000000','#ffffff',60,45,.25,'screen')); return out; },
+  forest(r,p){ const g=p.length?p:['#1f4d2b','#2e9d4a','#5b6b3a','#9cc76a']; const out=[Fl(shade(g[0],-.35),'Orman zemini')];
+    for(let i=0;i<110;i++) out.push(El(r()*W,r()*H,50+r()*110,18+r()*40,g[i%g.length],{rot:Math.round(r()*180),opacity:.7+r()*.3,name:'Yaprak'})); return out; },
+  retro(r,p){ const out=[Gr(p[0]||'#2b1055',p[1]||'#d53369',180,'linear','Gece gökyüzü'),Pt('grid','#000000',p[2]||'#ff4fd8',40+Math.round(r()*30),0,.55,'screen')];
+    const sx=W/2, sy=H*.28, sr=170+r()*80; out.push(El(sx,sy,sr*2,sr*2,'#ffb000',{name:'Güneş'}));
+    for(let i=0;i<6;i++) out.push(Rc(sx,sy+sr*.15+i*sr*.15,sr*2+20,4+i*4,p[0]||'#2b1055',{name:'Güneş çizgisi'})); return out; },
+  minimal(r,p){ const out=[Fl(p[0]||'#e6e6e6','Gövde rengi')], c=p[1]||(lum(p[0]||'#e6e6e6')>.5?'#0b0b0d':'#ffffff');
+    out.push(Rc(W/2,H/2,8+r()*16,H,c,{name:'İnce şerit'})); if(r()>.5) out.push(Rc(W/2+28,H/2,3,H,c,{name:'Kılcal çizgi'})); return out; },
+  geometric(r,p){ const cs=p.length>=2?p:['#0b0b0d','#ffd400','#1e6bff','#ffffff']; const out=[Fl(cs[0],'Zemin')];
+    for(let i=0;i<22;i++){ const s=60+r()*260; out.push(Rc(r()*W,r()*H,s,s*(.3+r()*.9),cs[1+i%(cs.length-1)],{rot:[0,45,-45,30,60][Math.floor(r()*5)],opacity:.6+r()*.4,name:'Parça'})); } return out; },
+  dots(r,p){ return [Pt('dots',p[0]||'#0b0b0d',p[1]||'#ffffff',30+r()*40,Math.round(r()*45),1)]; },
+  stripes(r,p){ return [Pt('stripes',p[0]||'#0b0b0d',p[1]||'#ffffff',24+r()*60,[0,45,90,135][Math.floor(r()*4)],1)]; },
+  checker(r,p){ return [Pt('checker',p[0]||'#0b0b0d',p[1]||'#ffffff',40+r()*60,r()>.5?0:45,1)]; },
+  zigzag(r,p){ return [Pt('zigzag',p[0]||'#0b0b0d',p[1]||'#ffd400',40+r()*50,Math.round(r()*90),1)]; },
+  graffiti(r,p){ const cs=[...p,'#ff4fa3','#39ff14','#1e6bff','#ffd400','#ff6a00']; const bg=p.find(c=>lum(c)<.3)||'#1b1b1f', out=[Fl(bg,'Duvar')];
+    for(let i=0;i<14;i++){ let x=r()*W, y=r()*H; const pts=[[x,y]]; for(let j=0;j<18;j++){ x+=r()*90-45; y+=r()*90-45; pts.push([Math.round(x),Math.round(y)]); }
+      out.push(Br(pts,cs[i%cs.length],18+r()*40,{opacity:.85,name:'Sprey'})); } return out; },
+  luxury(r,p){ const bg=p.find(c=>lum(c)<.35)||'#0c1f4a', gold=p.find(c=>c!==bg)||'#c9a227';
+    const out=[Fl(bg,'Gövde rengi'),Pt('dots',bg,shade(bg,.12),14,45,.5)];
+    out.push(Rc(W/2-14,H/2,4,H,gold,{name:'Altın çizgi'}),Rc(W/2+14,H/2,4,H,gold,{name:'Altın çizgi'}));
+    if(r()>.4) out.push(Rc(W/2,H/2,12,H,gold,{name:'Orta şerit',opacity:.9}));
+    out.push(Rc(W*.16,H/2,3,H*.86,gold,{name:'Yan çizgi'}),Rc(W*.84,H/2,3,H*.86,gold,{name:'Yan çizgi'})); return out; },
+  rainbow(r,p){ const cs=['#e40303','#ff8c00','#ffed00','#008026','#004dff','#750787'], bg=p[0]||'#0b0b0d', out=[Fl(bg,'Zemin')], w=18+r()*16;
+    cs.forEach((c,i)=>out.push(Rc(W/2+(i-2.5)*w,H/2,w,H,c,{name:'Renk şeridi'}))); if(r()>.5) cs.forEach((c,i)=>out.push(Rc(W*.15+(i-2.5)*8,H/2,8,H*.9,c,{name:'Yan şerit'}),Rc(W*.85+(i-2.5)*8,H/2,8,H*.9,c,{name:'Yan şerit'})));
+    return out; },
+  gradient(r,p){ return [Gr(p[0]||'#ff6a00',p[1]||'#6a2dbd',Math.round(r()*360),r()>.8?'radial':'linear')]; }
+};
+const FONT_BY={race:'Bebas Neue',luxury:'Playfair Display',graffiti:'Permanent Marker',retro:'Orbitron',space:'Orbitron',minimal:'Unbounded',geometric:'Unbounded'};
+function textLayers(t,theme,p,r){
+  const f=FONT_BY[theme]||'Bebas Neue', bg=p[0]||'#000000', c=lum(bg)>.55?'#0b0b0d':(p.find(x=>x!==bg&&lum(x)>.4)||'#ffffff');
+  const size=t.length<=3?150:Math.max(60,Math.min(130,900/t.length));
+  return [Tx(t,W*.16,H*.45,size,c,f,-90,{name:'Yan yazı'}),Tx(t,W*.84,H*.45,size,c,f,90,{name:'Yan yazı'})];
+}
+function generate(raw,seed){
+  const {cols,themes,text}=parseWords(raw);
+  const pool=['race','luxury','geometric','minimal','gradient','carbon','retro','space'];
+  const rr=rng(seed); const out=[];
+  for(let i=0;i<4;i++){
+    const r=rng(seed*7+i*101+1);
+    let th=themes.length?themes[i%themes.length]:pool[Math.floor(rr()*pool.length)];
+    if(!themes.length) while(out.some(o=>o.theme===th)) th=pool[Math.floor(rr()*pool.length)];
+    let p=[...cols]; if(i%2===1&&p.length>1) p=[p[1],p[0],...p.slice(2)];
+    if(i===2&&p.length) p=[shade(p[0],-.25),...p.slice(1)];
+    let layers=GEN[th](r,p);
+    const tex=themes.find(t=>t!==th&&TEXTURE.has(t));
+    if(tex && (i>0||!TEXTURE.has(th))){ const tl=GEN[tex](r,[p[0]||'#000000','#ffffff'])[0]; if(tl.type==='pattern'){tl.opacity=.18;tl.blend='overlay';} layers.splice(1,0,...(tl.type==='pattern'?[tl]:[])); }
+    if(text) layers.push(...textLayers(text,th,p,r));
+    const uniq=p.slice(0,2).map(v=>Object.keys(COLORS).find(k=>COLORS[k]===v)).filter(Boolean);
+    out.push({theme:th,name:THEME_TR[th]+(tex&&tex!==th?' + '+THEME_TR[tex].toLowerCase():''),sub:uniq.length?uniq.join(' / '):'Varsayılan renkler',layers});
+  }
+  return out;
+}
+
+// ---------- alternatives UI ----------
+let alts=[], genSeed=1;
+function drawDesign(cv,layers){
+  const sc=cv.width/W, g=cv.getContext('2d'); g.setTransform(1,0,0,1,0,0); g.clearRect(0,0,cv.width,cv.height); g.setTransform(sc,0,0,sc,0,0);
+  for(const L of layers) drawLayer(g,L);
+  const t=tpl[S.model]; if(t){ g.save(); g.globalCompositeOperation='destination-in'; g.drawImage(t.mask,0,0,W,H); g.restore(); g.save(); g.globalAlpha=.55; g.drawImage(t.lines,0,0,W,H); g.restore(); }
+}
+function showAlts(list){
+  alts=list; const el=$('#alts'); el.style.setProperty('--ar',W/H);
+  el.innerHTML=list.map((a,i)=>`<button class="alt" data-alt="${i}"><canvas width="360" height="${Math.round(360*H/W)}"></canvas><b>${esc(a.name)}</b><small>${esc(a.sub)}</small></button>`).join('');
+  el.querySelectorAll('canvas').forEach((cv,i)=>drawDesign(cv,list[i].layers));
+}
+$('#alts').addEventListener('click',e=>{
+  const b=e.target.closest('[data-alt]'); if(!b) return; const a=alts[+b.dataset.alt]; if(!a) return;
+  S.layers=JSON.parse(JSON.stringify(a.layers)).map(l=>({...l,id:nid()})); sel=null; setMode('select',true); render(); commit();
+  toast('Tasarım alanına alındı. Geri al ile önceki hâline dönebilirsin.');
+  if(matchMedia('(max-width:720px)').matches) $('#stage').scrollIntoView({behavior:'smooth',block:'start'});
+});
+function runGen(newSeed){
+  const v=$('#genIn').value.trim(), st=$('#genStatus');
+  if(!v){ st.textContent='Önce birkaç kelime yaz: renk, tema, tırnak içinde yazı.'; st.className='status err'; return; }
+  if(newSeed) genSeed=Math.floor(Math.random()*1e9);
+  const p=parseWords(v); showAlts(generate(v,genSeed));
+  const parts=[]; if(p.themes.length) parts.push('Tema: '+p.themes.map(t=>THEME_TR[t]).join(', ')); if(p.cols.length) parts.push(p.cols.length+' renk'); if(p.text) parts.push('Yazı: '+p.text);
+  st.textContent=(parts.length?'Anladığım: '+parts.join(' · ')+'. ':'Tanıdığım bir kelime yok, karışık öneriler hazırladım. ')+'Tekrar basınca yeni varyasyonlar gelir.'; st.className='status';
+  $('#genBtn').textContent='Yeni varyasyonlar';
+}
+$('#genBtn').onclick=()=>runGen(true);
+$('#genIn').addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); runGen(true); } });
+$('#genIn').addEventListener('input',()=>{ $('#genBtn').textContent='4 alternatif üret'; });
+$('#genChips').innerHTML=CHIPS.map(c=>`<button class="chip" data-chip="${c}">${c}</button>`).join('');
+$('#genChips').addEventListener('click',e=>{ const c=e.target.closest('[data-chip]'); if(!c) return; const t=$('#genIn'); t.value=(t.value.trim()+' '+c.dataset.chip).trim(); runGen(true); });
+
+// ---------- boot ----------
+(async()=>{
+  const had=await loadSaved();
+  if(!had) S.layers=sample();
+  $('#optLines').checked=S.lines; $('#optLineOp').value=S.lineOp; $('#optMask').checked=S.mask;
+  await setModel(S.model);
+  lastSnap=snap(); syncUI(); runGen(false);
+  if(document.fonts){ Promise.all(FONTS.map(f=>document.fonts.load(`400 40px "${f}"`).catch(()=>{}))).then(()=>{render();renderLayers();if(alts.length)showAlts(alts)}); document.fonts.ready.then(()=>{render();renderLayers();if(alts.length)showAlts(alts)}); }
+})();
+})();
+if('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
