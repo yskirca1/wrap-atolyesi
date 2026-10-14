@@ -182,6 +182,11 @@ header.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .qbtn.ic{width:44px;padding:0;display:grid;place-items:center}
 .qbtn svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .qbtn.danger{color:var(--danger)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden}
+.seg .qbtn{border:0;border-radius:0;background:var(--panel2)}
+.seg .qbtn+.qbtn{border-left:1px solid var(--line)}
+.seg .qbtn[aria-pressed="true"],.clipbtn[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.clipbtn{display:inline-flex;align-items:center;gap:6px}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:8px;font-weight:600;font-size:13px;z-index:30}
 
 @media (max-width:1080px){
@@ -253,6 +258,10 @@ header.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
         </div>
       </div>
       <div class="quick" id="quick" hidden>
+        <div class="qrow">
+          <div class="seg" role="group" aria-label="Yerleştirme biçimi"><button class="qbtn" data-q="fill" id="qFill">Doldur</button><button class="qbtn" data-q="fit" id="qFit">Sığdır</button></div>
+          <button class="qbtn clipbtn" data-q="clip" id="qClip" aria-pressed="false"><svg viewBox="0 0 24 24"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4 8.1 15.9M14.5 14.5 20 20M8.1 8.1 12 12"/></svg>Taşmasın</button>
+        </div>
         <div class="qrow"><span class="qlabel">Yerleştir</span>
           <button class="qbtn" data-q="place:all">Tüm araç</button><button class="qbtn" data-q="place:hood">Kaput</button><button class="qbtn" data-q="place:roof">Tavan</button><button class="qbtn" data-q="place:rear">Arka</button><button class="qbtn" data-q="place:left">Sol yan</button><button class="qbtn" data-q="place:right">Sağ yan</button><button class="qbtn" data-q="place:sides">İki yan</button>
         </div>
@@ -273,7 +282,7 @@ header.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
         <label>Koyuluk <input type="range" id="optLineOp" min="0.1" max="1" step="0.05" value="0.7"></label>
         <label><input type="checkbox" id="optMask" checked> Sadece paneller</label>
       </div>
-      <p class="hint">Şablonun üstü aracın önü. Görseli parmağınla sürükle, <b>iki parmakla</b> büyüt ve döndür. Bilgisayarda köşeden boyutlandır, üstteki noktadan döndür, fare tekerleğiyle büyüt.</p>
+      <p class="hint"><b>Taşmasın</b> açıkken görsel yalnızca seçtiğin bölgenin panellerinde görünür. Şablonun üstü aracın önü. Görseli parmağınla sürükle, <b>iki parmakla</b> büyüt ve döndür. Bilgisayarda köşeden boyutlandır, üstteki noktadan döndür, fare tekerleğiyle büyüt.</p>
     </main>
 
     <aside class="side right">
@@ -340,7 +349,7 @@ const main=$('#main'), over=$('#over'), ctx=main.getContext('2d'), octx=over.get
 let W=1024,H=1024;
 
 // ---------- state ----------
-let S={model:'modely-2025-premium',layers:[],lines:true,lineOp:.7,mask:true};
+let S={model:'modely-2025-premium',layers:[],lines:true,lineOp:.7,mask:true,fit:'fill',clip:true};
 let sel=null, mode='select', brush={color:'#ffffff',width:18};
 const imgs={}, imgSrc={};          // image layers: id -> Image / dataURL
 const tpl={};                       // model -> {mask,lines}
@@ -387,16 +396,45 @@ function findRegions(mask){
   return { left:bb(0,.30,.1,1), right:bb(.70,1,.1,1),
     hood:{x0:C.x0,y0:C.y0,x1:C.x1,y1:C.y0+ch*.32}, roof:{x0:C.x0,y0:C.y0+ch*.32,x1:C.x1,y1:C.y0+ch*.78}, rear:{x0:C.x0,y0:C.y0+ch*.78,x1:C.x1,y1:C.y1} };
 }
+function labelPanels(T){
+  const w=T.mask.naturalWidth, h=T.mask.naturalHeight, n=w*h;
+  const px=img=>{ const cv=document.createElement('canvas'); cv.width=w; cv.height=h; const g=cv.getContext('2d',{willReadFrequently:true}); g.drawImage(img,0,0,w,h); return g.getImageData(0,0,w,h).data; };
+  const M=px(T.mask), Ln=px(T.lines), lab=new Int32Array(n), inside=new Uint8Array(n);
+  for(let i=0;i<n;i++){ if(M[i*4+3]>40) inside[i]=1; if(M[i*4+3]>128&&Ln[i*4+3]<90) lab[i]=-1; }
+  const comps=[]; let next=1; const st=new Int32Array(n);
+  for(let i=0;i<n;i++){ if(lab[i]!==-1) continue; let top=0; st[top++]=i; lab[i]=next; let cnt=0,sx=0,sy=0;
+    while(top){ const j=st[--top]; cnt++; const x=j%w, y=(j-x)/w; sx+=x; sy+=y;
+      if(x>0&&lab[j-1]===-1){lab[j-1]=next;st[top++]=j-1} if(x<w-1&&lab[j+1]===-1){lab[j+1]=next;st[top++]=j+1}
+      if(y>0&&lab[j-w]===-1){lab[j-w]=next;st[top++]=j-w} if(y<h-1&&lab[j+w]===-1){lab[j+w]=next;st[top++]=j+w} }
+    comps[next]={id:next,area:cnt,cx:sx/cnt,cy:sy/cnt}; next++; }
+  // grow labels over the outline pixels so clipped art reaches the panel edge
+  for(let it=0;it<6;it++){ const cp=lab.slice(); for(let i=0;i<n;i++){ if(cp[i]>0||!inside[i]) continue; const x=i%w;
+    const v=(x>0&&cp[i-1]>0)?cp[i-1]:(x<w-1&&cp[i+1]>0)?cp[i+1]:(i>=w&&cp[i-w]>0)?cp[i-w]:(i+w<n&&cp[i+w]>0)?cp[i+w]:0; if(v) lab[i]=v; } }
+  T.lab=lab; T.comps=comps.filter(c=>c&&c.area>150); T.w=w; T.h=h;
+}
+function regionIds(reg){ const T=tpl[S.model], R=T?.regions?.[reg]; if(!R||!T.comps) return null;
+  const ids=T.comps.filter(c=>c.cx>=R.x0&&c.cx<=R.x1&&c.cy>=R.y0&&c.cy<=R.y1).map(c=>c.id); return ids.length?ids:null; }
+function panelAt(x,y){ const T=tpl[S.model]; if(!T?.lab) return null; x=Math.round(x); y=Math.round(y); if(x<0||y<0||x>=T.w||y>=T.h) return null;
+  const v=T.lab[y*T.w+x]; return v>0&&T.comps.some(c=>c.id===v)?[v]:null; }
+const clipCache=new Map();
+function clipMask(ids){
+  const T=tpl[S.model]; if(!T?.lab) return null; const key=S.model+'|'+ids.join(','); if(clipCache.has(key)) return clipCache.get(key);
+  const set=new Set(ids), cv=document.createElement('canvas'); cv.width=T.w; cv.height=T.h; const g=cv.getContext('2d'), d=g.createImageData(T.w,T.h), D=d.data;
+  for(let i=0;i<T.lab.length;i++) if(set.has(T.lab[i])){ D[i*4]=D[i*4+1]=D[i*4+2]=255; D[i*4+3]=255; }
+  g.putImageData(d,0,0); clipCache.set(key,cv); if(clipCache.size>20) clipCache.delete(clipCache.keys().next().value); return cv;
+}
+const offs={}; function offCanvas(w,h){ const k=w+'x'+h; let c=offs[k]; if(!c){ c=offs[k]=document.createElement('canvas'); c.width=w; c.height=h; } return c; }
 async function ensureTpl(id){
   if(tpl[id]) return tpl[id];
   const [mask,lines]=await Promise.all([loadImg(asset(`${id}-mask`)),loadImg(asset(`${id}-lines`))]);
-  return tpl[id]={mask,lines,regions:findRegions(mask)};
+  const T={mask,lines,regions:findRegions(mask)}; labelPanels(T); return tpl[id]=T;
 }
 async function setModel(id,commitIt){
   S.model=id; const m=MODELS.find(x=>x.id===id)||MODELS[0];
   $('#modelImg').src=asset(`${m.id}-car`); $('#modelName').textContent=m.n; $('#modelSub').textContent=m.s||'Tüm versiyonlar';
   try{ const t=await ensureTpl(id); W=t.mask.naturalWidth; H=t.mask.naturalHeight; }catch(e){ toast('Şablon yüklenemedi'); }
   for(const c of [main,over]){ if(c.width!==W) c.width=W; if(c.height!==H) c.height=H; }
+  for(const L of S.layers) if(L.clip){ const ids=L.clipReg&&L.clipReg!=='panel'?regionIds(L.clipReg):null; if(ids) L.clip=ids; else { delete L.clip; delete L.clipReg; } }
   $('#stage').style.setProperty('--ar',W/H);
   render(); if(commitIt) commit();
 }
@@ -580,8 +618,13 @@ function cutout(id,tol){
   g.putImageData(d,0,0); cutCache.set(key,cv); if(cutCache.size>12) cutCache.delete(cutCache.keys().next().value);
   return cv;
 }
-function drawLayer(c,L){
+function drawLayer(c,L,inner){
   if(!L.visible) return;
+  if(!inner && L.clip && L.clip.length){ const m=clipMask(L.clip);
+    if(m){ const oc=offCanvas(c.canvas.width,c.canvas.height), g=oc.getContext('2d'); g.setTransform(1,0,0,1,0,0); g.clearRect(0,0,oc.width,oc.height);
+      g.setTransform(c.getTransform()); drawLayer(g,{...L,opacity:1,blend:'source-over'},true);
+      g.globalCompositeOperation='destination-in'; g.drawImage(m,0,0,W,H); g.globalCompositeOperation='source-over';
+      c.save(); c.setTransform(1,0,0,1,0,0); c.globalAlpha=L.opacity??1; c.globalCompositeOperation=L.blend||'source-over'; c.drawImage(oc,0,0); c.restore(); return; } }
   c.save(); c.globalAlpha=L.opacity??1; c.globalCompositeOperation=L.blend||'source-over';
   const T=L.type;
   if(T==='fill'){ c.fillStyle=L.color; c.fillRect(0,0,W,H); }
@@ -644,7 +687,10 @@ function renderOver(){
   octx.clearRect(0,0,W,H);
   const t=tpl[S.model];
   if(S.lines && t){ octx.save(); octx.globalAlpha=S.lineOp; octx.drawImage(t.lines,0,0,W,H); octx.restore(); }
-  const L=getSel(); if(!L) return; const b=box(L); if(!b) return;
+  const L=getSel(); if(!L) return;
+  if(L.clip){ const m=clipMask(L.clip); if(m){ if(!m.tint){ const t=document.createElement('canvas'); t.width=m.width; t.height=m.height; const tg=t.getContext('2d'); tg.drawImage(m,0,0); tg.globalCompositeOperation='source-in'; tg.fillStyle='#3350ee'; tg.fillRect(0,0,t.width,t.height); m.tint=t; }
+    octx.save(); octx.globalAlpha=.16; octx.drawImage(m.tint,0,0,W,H); octx.restore(); } }
+  const b=box(L); if(!b) return;
   const s=k(); octx.save(); octx.translate(b.x,b.y); octx.rotate(b.rot*PI/180);
   octx.lineWidth=1.5*s; octx.setLineDash([6*s,4*s]); octx.strokeStyle='#ffffff'; octx.strokeRect(-b.w/2,-b.h/2,b.w,b.h);
   octx.lineDashOffset=5*s; octx.strokeStyle='#3350ee'; octx.strokeRect(-b.w/2,-b.h/2,b.w,b.h); octx.setLineDash([]);
@@ -673,7 +719,7 @@ function doRedo(){ if(!redo.length) return; undo.push(lastSnap); restore(redo.po
 const KEY='wrap-atolyesi-gorsel-v1';
 function persist(){
   const used={}; for(const L of S.layers) if(L.type==='image' && imgSrc[L.src]) used[L.src]=imgSrc[L.src];
-  const base={model:S.model,layers:S.layers,lines:S.lines,lineOp:S.lineOp,mask:S.mask};
+  const base={model:S.model,layers:S.layers,lines:S.lines,lineOp:S.lineOp,mask:S.mask,fit:S.fit,clip:S.clip};
   try{ localStorage.setItem(KEY,JSON.stringify({...base,images:used})); }
   catch(e){ try{ localStorage.setItem(KEY,JSON.stringify({...base,layers:S.layers.filter(l=>l.type!=='image'),images:{}})); }catch(_){} }
 }
@@ -730,18 +776,33 @@ function toEdge(id,top){ const i=S.layers.findIndex(l=>l.id===id); if(i<0) retur
 // ---------- placement ----------
 const REG_TR={all:'Tüm araç',hood:'Kaput',roof:'Tavan',rear:'Arka',left:'Sol yan',right:'Sağ yan',sides:'İki yan'};
 function natSize(L){ if(L.type==='image'){ const im=imgs[L.src]; return [im?.naturalWidth||L.w, im?.naturalHeight||L.h]; } return [L.w,L.h]; }
+function setClip(L,reg){
+  if(reg==='all'||S.clip===false){ delete L.clip; delete L.clipReg; return; }
+  const ids=regionIds(reg); if(ids){ L.clip=ids; L.clipReg=reg; } else { delete L.clip; delete L.clipReg; }
+}
+function toggleClip(){
+  const L=getSel(); if(!L) return;
+  if(L.clip){ delete L.clip; delete L.clipReg; S.clip=false; toast('Kırpma kapalı: görsel panellerin dışına taşabilir'); }
+  else { S.clip=true; const ids=panelAt(L.x,L.y);
+    if(!ids){ toast('Görselin ortası bir panelin üstünde değil. Önce bir bölgeye yerleştir ya da görseli bir panelin üstüne taşı.'); syncUI(); return; }
+    L.clip=ids; L.clipReg='panel'; toast('Görsel yalnızca bu panelde görünecek'); }
+  render(); syncUI(); commit();
+}
 function placeIn(L,reg){
   const R=reg==='all'?{x0:0,y0:0,x1:W,y1:H}:tpl[S.model]?.regions?.[reg]; if(!R) return false;
   const rw=R.x1-R.x0, rh=R.y1-R.y0, side=reg==='left'||reg==='right', rot=reg==='left'?90:reg==='right'?-90:0;
   L.rot=rot; L.x=Math.round((R.x0+R.x1)/2); L.y=Math.round((R.y0+R.y1)/2);
+  setClip(L,reg);
   if(L.type==='text'){ const t=textBox({...L,size:100}); const bw=side?rh:rw, bh=side?rw:rh; L.size=Math.max(10,Math.round(100*Math.min(bw*.9/t.w,bh*.8/t.h))); return true; }
-  const [iw,ih]=natSize(L), bw=side?rh:rw, bh=side?rw:rh, sc=Math.max(bw/iw,bh/ih);
+  const [iw,ih]=natSize(L), bw=side?rh:rw, bh=side?rw:rh, sc=(S.fit==='fit'?Math.min:Math.max)(bw/iw,bh/ih);
   L.w=Math.round(iw*sc); L.h=Math.round(ih*sc); return true;
 }
 function quick(q){
   const L=getSel(); if(!L) return;
   if(q==='replace'){ replaceId=L.type==='image'?L.id:null; if(replaceId) $('#fileIn').click(); return; }
   if(q==='del') return del();
+  if(q==='clip') return toggleClip();
+  if(q==='fit'||q==='fill'){ S.fit=q; persist(); syncUI(); if(L.clipReg&&L.clipReg!=='panel'){ placeIn(L,L.clipReg); render(); liveProps(); commit(); } toast(q==='fit'?'Yerleştirirken görsel bölgeye tamamen sığacak':'Yerleştirirken görsel bölgeyi dolduracak'); return; }
   if(q.startsWith('place:')){ const reg=q.slice(6);
     if(reg==='sides'){ placeIn(L,'left'); const c=JSON.parse(JSON.stringify(L)); c.id=nid(); c.name=(L.name||'')+' (sağ)'; placeIn(c,'right'); S.layers.splice(S.layers.indexOf(L)+1,0,c); }
     else if(!placeIn(L,reg)){ toast('Bu modelde bölge bulunamadı'); return; }
@@ -977,7 +1038,9 @@ props.addEventListener('click',e=>{
 
 function syncUI(){ renderLayers(); renderProps();
   $('#emptyDrop').hidden=S.layers.some(l=>l.type==='image'); const L=getSel(); $('#quick').hidden=!canXform(L);
-  $('#quick').querySelectorAll('[data-q=replace]').forEach(b=>b.hidden=!(L&&L.type==='image')); $('#undoBtn').disabled=!undo.length; $('#redoBtn').disabled=!redo.length; }
+  $('#quick').querySelectorAll('[data-q=replace]').forEach(b=>b.hidden=!(L&&L.type==='image'));
+  $('#qFill').setAttribute('aria-pressed',S.fit!=='fit'); $('#qFit').setAttribute('aria-pressed',S.fit==='fit');
+  $('#qClip').setAttribute('aria-pressed',!!(L&&L.clip)); $('#undoBtn').disabled=!undo.length; $('#redoBtn').disabled=!redo.length; }
 
 // ---------- view options ----------
 $('#optLines').addEventListener('change',e=>{S.lines=e.target.checked;render();persist()});
